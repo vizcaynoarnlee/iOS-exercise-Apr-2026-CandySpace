@@ -1,0 +1,28 @@
+//
+//  APIClientError.swift
+//  CandySpace
+//
+//  Created by Arnlee Vizcayno on 4/22/26.
+//
+
+import Foundation
+
+// Used to display localized error messages
+enum APIClientError: LocalizedError, Equatable {
+    case invalidURL
+    case invalidResponse
+    case invalidJsonDecoding
+    
+    var errorDescription: String? {
+        switch self {
+        case .invalidURL:
+            return "Invalid URL"
+            
+        case .invalidResponse:
+            return "Invalid URL Response"
+            
+        case .invalidJsonDecoding:
+            return "Invalid JSON Decoding"
+        }
+    }
+}

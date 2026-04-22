@@ -1,0 +1,31 @@
+//
+//  EndpointProtocol.swift
+//  CandySpace
+//
+//  Created by Arnlee Vizcayno on 4/22/26.
+//
+
+
+import Foundation
+
+enum EndpointMethod: String {
+    case GET
+    case POST
+}
+
+// Protocol to create endpoints
+protocol EndpointProtocol {
+    // Path: the API path
+    var path: String { get }
+    // Method: http method
+    var method: EndpointMethod { get }
+    // Query items: url query items when method is GET
+    var urlQueryItems: [URLQueryItem]? { get }
+    // Parameter items: JSON parameter body when method is POST
+    var jsonParameters: (any Encodable)? { get }
+}
+
+extension EndpointProtocol {
+    var urlQueryItems: [URLQueryItem]? { nil }
+    var jsonParameters: (any Encodable)? { nil }
+}
