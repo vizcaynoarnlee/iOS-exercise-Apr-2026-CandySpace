@@ -18,9 +18,9 @@ enum TabType: Int, Identifiable {
     var title: String {
         switch self {
         case .cards:
-            return "Dashboard"
+            return String(localized: "Dashboard")
         case .profile:
-            return "Profile"
+            return String(localized: "Profile")
         }
     }
 

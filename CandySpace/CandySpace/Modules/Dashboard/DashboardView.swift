@@ -9,13 +9,13 @@ import SwiftUI
 
 struct DashboardView: View {
     @State var viewModel: DashboardViewModel = .init()
-    
+
     var body: some View {
         NavigationStack {
             VStack {
                 switch viewModel.viewState {
                 case .initial, .loading:
-                    ProgressView("loading...")
+                    ProgressView(String(localized: "Loading..."))
 
                 case .loaded:
                     contentView
@@ -31,13 +31,20 @@ struct DashboardView: View {
             }
         }
     }
-    
+
     var contentView: some View {
         ZStack {
-            if viewModel.isMediaEmpty {
-                EmptyView(message: "No media found.")
+            if viewModel.isSectionsEmpty {
+                EmptyStateView(message: String(localized: "No media found."))
             } else {
-                Text("Media \(viewModel.media?.record.sections.count ?? 0)")
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 28) {
+                        ForEach(viewModel.sectionRailViewModels) { railViewModel in
+                            SectionRailView(viewModel: railViewModel)
+                        }
+                    }
+                    .padding(.vertical, 16)
+                }
             }
         }
     }

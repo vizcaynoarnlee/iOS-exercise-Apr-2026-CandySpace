@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Section: Codable {
+struct Section: Codable, Identifiable {
     let id: String
     let name: String
     let type: SectionType

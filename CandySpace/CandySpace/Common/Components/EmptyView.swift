@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-struct EmptyView: View {
+struct EmptyStateView: View {
     var message: String?
     
     var body: some View {
@@ -16,12 +16,12 @@ struct EmptyView: View {
             Image(systemName: "xmark.bin.circle")
                 .foregroundColor(.gray)
                 .font(.largeTitle)
-            Text(message ?? "Empty list.")
+            Text(message ?? String(localized: "Empty list."))
                 .font(.caption)
         }
     }
 }
 
 #Preview {
-    EmptyView()
+    EmptyStateView()
 }

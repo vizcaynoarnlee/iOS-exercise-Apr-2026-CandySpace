@@ -16,7 +16,7 @@ struct ErrorView: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundColor(.yellow)
                 .font(.largeTitle)
-            Text(errorMessage ?? "Unknown error occurred.")
+            Text(errorMessage ?? String(localized: "Unknown error occurred."))
                 .font(.caption)
         }
     }
