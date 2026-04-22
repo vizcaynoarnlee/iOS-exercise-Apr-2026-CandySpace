@@ -22,7 +22,12 @@ struct DashboardView: View {
                     contentView
 
                 case let .error(error):
-                    ErrorView(errorMessage: error.localizedDescription)
+                    ErrorView(
+                        errorMessage: error.localizedDescription,
+                        onRefresh: {
+                            Task { await refresh() }
+                        }
+                    )
                 }
             }
             .task {
@@ -65,8 +70,15 @@ struct DashboardView: View {
                     }
                     .padding(.vertical, 16)
                 }
+                .refreshable {
+                    await refresh()
+                }
             }
         }
+    }
+
+    private func refresh() async {
+        await viewModel.loadMedia()
     }
 }
 

@@ -10,14 +10,20 @@ import SwiftUI
 
 struct ErrorView: View {
     var errorMessage: String?
+    var onRefresh: (() -> Void)?
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundColor(.yellow)
                 .font(.largeTitle)
             Text(errorMessage ?? String(localized: "Unknown error occurred."))
                 .font(.caption)
+
+            if let onRefresh {
+                Button(String(localized: "Retry"), action: onRefresh)
+                    .buttonStyle(.borderedProminent)
+            }
         }
     }
 }
