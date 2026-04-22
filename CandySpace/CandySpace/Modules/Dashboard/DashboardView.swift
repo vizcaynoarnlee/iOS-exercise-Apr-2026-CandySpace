@@ -16,7 +16,7 @@ struct DashboardView: View {
             VStack {
                 switch viewModel.viewState {
                 case .initial, .loading:
-                    ProgressView(String(localized: "Loading..."))
+                    DashboardSkeletonView()
 
                 case .loaded:
                     contentView
