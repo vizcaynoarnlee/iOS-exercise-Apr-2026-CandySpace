@@ -22,17 +22,17 @@ extension CandySpaceTests {
             id: "brd1",
             type: "brand",
             title: "Brand",
-            strapline: nil,
+            strapline: "Strap",
             imageUrl: "https://example.com/image.jpg",
             categories: nil,
             genres: nil,
             subgenres: nil,
-            badges: ["NEW SERIES"],
+            badges: ["NEW SERIES", "RECENTLY ADDED"],
             accessibility: AccessibilityInfo(subtitled: true, audioDescribed: false, signed: false),
-            tier: ["FREE"],
+            tier: ["FREE", "PREMIUM"],
             contentOwner: nil,
-            synopsis: nil,
-            latestBroadcastDateTime: nil
+            synopsis: "Synopsis",
+            latestBroadcastDateTime: "2026-04-22T10:00:00Z"
         )
 
         let display: ContentItemDisplay = ContentItem.brand(brand).display
@@ -41,6 +41,13 @@ extension CandySpaceTests {
         #expect(display.imageURLString == "https://example.com/image.jpg")
         #expect(display.badgeText == "NEW SERIES")
         #expect(display.tierText == "FREE")
+        #expect(display.title == "Brand")
+        #expect(display.subtitle == nil)
+        #expect(display.strapline == "Strap")
+        #expect(display.synopsis == "Synopsis")
+        #expect(display.badges == ["NEW SERIES", "RECENTLY ADDED"])
+        #expect(display.tiers == ["FREE", "PREMIUM"])
+        #expect(display.latestBroadcastDateTime == "2026-04-22T10:00:00Z")
     }
 
     @Test
@@ -99,6 +106,41 @@ extension CandySpaceTests {
 
         #expect(sorted.map(\.id) == ["sec2", "sec1", "sec3"])
     }
+
+    @Test
+    func sectionDetails_layoutSelection_twoByThree_isGrid() throws {
+        let media: Media = Media(
+            record: Record(
+                page: SectionDetailsFixtures.pageInfo,
+                sections: [SectionDetailsFixtures.sectionTwoByThree]
+            ),
+            metadata: SectionDetailsFixtures.metadata
+        )
+
+        let viewModel: DashboardViewModel = DashboardViewModel(initialMedia: media)
+        let route: SectionDetailsRoute = SectionDetailsRoute(sectionId: SectionDetailsFixtures.sectionTwoByThree.id)
+        let details: SectionDetailsViewModel? = viewModel.makeSectionDetailsViewModel(route: route, navigate: { _ in })
+
+        #expect(details?.layout == .grid2Col)
+    }
+
+    @Test
+    func itemDetails_layoutSelection_sixteenByNine_isHeroTop() throws {
+        let media: Media = Media(
+            record: Record(
+                page: SectionDetailsFixtures.pageInfo,
+                sections: [SectionDetailsFixtures.sectionSixteenByNine]
+            ),
+            metadata: SectionDetailsFixtures.metadata
+        )
+
+        let viewModel: DashboardViewModel = DashboardViewModel(initialMedia: media)
+        let itemId: String = SectionDetailsFixtures.sectionSixteenByNine.items.first?.display.id ?? "unknown"
+        let route: ItemDetailsRoute = ItemDetailsRoute(sectionId: SectionDetailsFixtures.sectionSixteenByNine.id, itemId: itemId)
+        let details: ItemDetailsViewModel? = viewModel.makeItemDetailsViewModel(route: route)
+
+        #expect(details?.layout == .heroTop)
+    }
 }
 
 private enum SectionSortingFixtures {
@@ -112,5 +154,106 @@ private enum SectionSortingFixtures {
         excludeTimeDependentTags: false,
         adServed: false,
         subsequentJourney: nil
+    )
+}
+
+private enum SectionDetailsFixtures {
+    static let pageInfo: PageInfo = PageInfo(
+        id: "p1",
+        name: nil,
+        imageUrl: nil,
+        adServed: false
+    )
+
+    static let metadata: Metadata = Metadata(
+        id: "m1",
+        private: false,
+        createdAt: "2026-04-22T00:00:00Z",
+        name: "test"
+    )
+
+    static let collectionTwoByThree: CollectionInfo = CollectionInfo(
+        id: "c2x3",
+        title: nil,
+        itemCount: 2,
+        imageTreatment: nil,
+        imageAspectRatio: .twoByThree,
+        imageClass: nil,
+        excludeTimeDependentTags: false,
+        adServed: false,
+        subsequentJourney: nil
+    )
+
+    static let collectionSixteenByNine: CollectionInfo = CollectionInfo(
+        id: "c16x9",
+        title: nil,
+        itemCount: 1,
+        imageTreatment: nil,
+        imageAspectRatio: .sixteenByNine,
+        imageClass: nil,
+        excludeTimeDependentTags: false,
+        adServed: false,
+        subsequentJourney: nil
+    )
+
+    static let sectionTwoByThree: Section = Section(
+        id: "sec2x3",
+        name: "TwoByThree",
+        type: .rail,
+        priority: "1",
+        displayType: nil,
+        platformDisplayType: nil,
+        destination: nil,
+        collection: collectionTwoByThree,
+        items: [
+            .brand(
+                BrandItem(
+                    id: "brd2",
+                    type: "brand",
+                    title: "Brand2",
+                    strapline: nil,
+                    imageUrl: nil,
+                    categories: nil,
+                    genres: nil,
+                    subgenres: nil,
+                    badges: [],
+                    accessibility: AccessibilityInfo(subtitled: false, audioDescribed: false, signed: false),
+                    tier: [],
+                    contentOwner: nil,
+                    synopsis: nil,
+                    latestBroadcastDateTime: nil
+                )
+            ),
+        ]
+    )
+
+    static let sectionSixteenByNine: Section = Section(
+        id: "sec16x9",
+        name: "SixteenByNine",
+        type: .rail,
+        priority: "1",
+        displayType: nil,
+        platformDisplayType: nil,
+        destination: nil,
+        collection: collectionSixteenByNine,
+        items: [
+            .film(
+                FilmItem(
+                    id: "flm1",
+                    type: "film",
+                    title: "Film",
+                    strapline: nil,
+                    imageUrl: nil,
+                    badges: [],
+                    broadcastDateTime: nil,
+                    episodeNumber: nil,
+                    duration: nil,
+                    brand: nil,
+                    tier: [],
+                    synopsis: nil,
+                    accessibility: AccessibilityInfo(subtitled: false, audioDescribed: false, signed: false)
+                )
+            ),
+        ]
     )
 }

@@ -40,12 +40,15 @@ final class DashboardViewModel: DashboardViewProtocol {
         }
     }
     var isSectionsEmpty: Bool { sections.isEmpty }
-    var sectionRailViewModels: [SectionRailViewModel] {
-        sortedSections.map(makeSectionRailViewModel(section:))
-    }
     
     init(mediaRepository: MediaRepositoryProtocol = MediaRepository()) {
         self.mediaRepository = mediaRepository
+    }
+
+    init(mediaRepository: MediaRepositoryProtocol = MediaRepository(), initialMedia: Media) {
+        self.mediaRepository = mediaRepository
+        self.media = initialMedia
+        self.viewState = .loaded
     }
     
     func loadMedia() async {
@@ -71,14 +74,33 @@ final class DashboardViewModel: DashboardViewProtocol {
         }
     }
 
-    private func makeSectionRailViewModel(section: Section) -> SectionRailViewModel {
-        let aspectRatio: CGFloat = section.collection.imageAspectRatio?.cgFloatValue ?? (2.0 / 3.0)
-        let itemCount: Int = section.collection.itemCount
-        let viewAllTitle: String = String(localized: "View All (\(itemCount))")
+    func makeSectionRailViewModels(navigate: @escaping @Sendable (DashboardRoute) -> Void) -> [SectionRailViewModel] {
+        sortedSections.map { makeSectionRailViewModel(section: $0, navigate: navigate) }
+    }
 
-        let visibleItems: [ItemCardViewModel] = section.items.prefix(5).map { item in
+    func makeSectionDetailsViewModel(
+        route: SectionDetailsRoute,
+        navigate: @escaping @Sendable (DashboardRoute) -> Void
+    ) -> SectionDetailsViewModel? {
+        guard let section: Section = section(withId: route.sectionId) else { return nil }
+
+        let layout: SectionDetailsLayout = {
+            switch section.collection.imageAspectRatio {
+            case .twoByThree:
+                return .grid2Col
+            case .sixteenByNine:
+                return .fullWidthRows
+            case nil:
+                return .grid2Col
+            }
+        }()
+
+        let aspectRatio: CGFloat = section.collection.imageAspectRatio?.cgFloatValue ?? (2.0 / 3.0)
+
+        let items: [ItemCardViewModel] = section.items.map { item in
             let display: ContentItemDisplay = item.display
             let imageURL: URL? = display.imageURLString.flatMap(URL.init(string:))
+            let itemRoute: ItemDetailsRoute = ItemDetailsRoute(sectionId: section.id, itemId: display.id)
 
             return ItemCardViewModel(
                 id: display.id,
@@ -86,9 +108,87 @@ final class DashboardViewModel: DashboardViewProtocol {
                 badgeText: display.badgeText,
                 tierText: display.tierText,
                 aspectRatio: aspectRatio,
-                accessibilityLabel: nil,
+                accessibilityLabel: display.title,
                 onTap: {
-                    debugPrint("ItemTap: \(display.id)")
+                    navigate(.itemDetails(itemRoute))
+                }
+            )
+        }
+
+        return SectionDetailsViewModel(
+            sectionId: section.id,
+            title: section.name,
+            layout: layout,
+            items: items
+        )
+    }
+
+    func makeItemDetailsViewModel(route: ItemDetailsRoute) -> ItemDetailsViewModel? {
+        guard let section: Section = section(withId: route.sectionId) else { return nil }
+        guard let item: ContentItem = item(withId: route.itemId, in: section) else { return nil }
+
+        let display: ContentItemDisplay = item.display
+        let layout: ItemDetailsLayout = {
+            switch section.collection.imageAspectRatio {
+            case .sixteenByNine:
+                return .heroTop
+            case .twoByThree, nil:
+                return .posterLeading
+            }
+        }()
+
+        let imageAspectRatio: CGFloat = section.collection.imageAspectRatio?.cgFloatValue ?? (2.0 / 3.0)
+        let imageURL: URL? = display.imageURLString.flatMap(URL.init(string:))
+
+        let dates: [String] = [display.broadcastDateTime, display.latestBroadcastDateTime].compactMap { $0 }
+
+        return ItemDetailsViewModel(
+            id: display.id,
+            imageURL: imageURL,
+            imageAspectRatio: imageAspectRatio,
+            layout: layout,
+            title: display.title ?? "",
+            subtitle: display.subtitle,
+            strapline: display.strapline,
+            synopsis: display.synopsis,
+            badges: display.badges,
+            tiers: display.tiers,
+            dates: dates,
+            duration: display.duration,
+            brandSummary: display.brandSummary
+        )
+    }
+
+    private func section(withId sectionId: String) -> Section? {
+        sections.first { $0.id == sectionId }
+    }
+
+    private func item(withId itemId: String, in section: Section) -> ContentItem? {
+        section.items.first { $0.display.id == itemId }
+    }
+
+    private func makeSectionRailViewModel(
+        section: Section,
+        navigate: @escaping @Sendable (DashboardRoute) -> Void
+    ) -> SectionRailViewModel {
+        let aspectRatio: CGFloat = section.collection.imageAspectRatio?.cgFloatValue ?? (2.0 / 3.0)
+        let itemCount: Int = section.collection.itemCount
+        let viewAllTitle: String = String(localized: "View All (\(itemCount))")
+
+        let visibleItems: [ItemCardViewModel] = section.items.prefix(5).map { item in
+            let display: ContentItemDisplay = item.display
+            let imageURL: URL? = display.imageURLString.flatMap(URL.init(string:))
+            let itemRoute: ItemDetailsRoute = ItemDetailsRoute(sectionId: section.id, itemId: display.id)
+
+            return ItemCardViewModel(
+                id: display.id,
+                imageURL: imageURL,
+                badgeText: display.badgeText,
+                tierText: display.tierText,
+                aspectRatio: aspectRatio,
+                accessibilityLabel: display.title,
+                onTap: {
+                    navigate(.itemDetails(itemRoute))
                 }
             )
         }
@@ -100,7 +200,7 @@ final class DashboardViewModel: DashboardViewProtocol {
             visibleItems: visibleItems,
             canViewAll: itemCount > 0,
             onViewAllTap: {
-                debugPrint("ViewAll: \(section.name)")
+                navigate(.sectionDetails(SectionDetailsRoute(sectionId: section.id)))
             }
         )
     }

@@ -9,9 +9,10 @@ import SwiftUI
 
 struct DashboardView: View {
     @State var viewModel: DashboardViewModel = .init()
+    @State private var path: [DashboardRoute] = []
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             VStack {
                 switch viewModel.viewState {
                 case .initial, .loading:
@@ -29,6 +30,25 @@ struct DashboardView: View {
                     await viewModel.loadMedia()
                 }
             }
+            .navigationDestination(for: DashboardRoute.self) { route in
+                switch route {
+                case let .sectionDetails(sectionRoute):
+                    if let detailsViewModel = viewModel.makeSectionDetailsViewModel(
+                        route: sectionRoute,
+                        navigate: { path.append($0) }
+                    ) {
+                        SectionDetailsView(viewModel: detailsViewModel)
+                    } else {
+                        ErrorView(errorMessage: String(localized: "Section not found."))
+                    }
+                case let .itemDetails(itemRoute):
+                    if let itemViewModel = viewModel.makeItemDetailsViewModel(route: itemRoute) {
+                        ItemDetailsView(viewModel: itemViewModel)
+                    } else {
+                        ErrorView(errorMessage: String(localized: "Item not found."))
+                    }
+                }
+            }
         }
     }
 
@@ -39,7 +59,7 @@ struct DashboardView: View {
             } else {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 28) {
-                        ForEach(viewModel.sectionRailViewModels) { railViewModel in
+                        ForEach(viewModel.makeSectionRailViewModels(navigate: { path.append($0) })) { railViewModel in
                             SectionRailView(viewModel: railViewModel)
                         }
                     }
